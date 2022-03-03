@@ -2,9 +2,9 @@
     {
         "cpu": 128,
         "essential": true,
-        "image": "nginx:latest",
+        "image": "ghcr.io/wiktorkowalski/wojtusdiscord-bot:latest",
         "memory": 128,
-        "name": "nginx",
+        "name": "wojtusdiscord-bot",
         "portMappings": [
             {
                 "containerPort": 80,
@@ -14,6 +14,14 @@
                 "containerPort": 443,
                 "hostPort": 443
             }
-        ]
+        ],
+        "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": "wojtusdiscord-bot",
+                "awslogs-region": "eu-central-1",
+                "awslogs-stream-prefix": "ecs"
+            }
+        }
     }
 ]

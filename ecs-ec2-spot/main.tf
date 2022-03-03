@@ -3,6 +3,10 @@ provider "aws" {
   profile = "default"
 }
 
+resource "aws_cloudwatch_log_group" "logs" {
+  name = "wojtusdiscord-bot"
+}
+
 module "ecs-cluster" {
   source  = "springload/ecs-cluster/aws"
   version = "0.2.5"
@@ -13,8 +17,54 @@ module "ecs-cluster" {
   ec2_key_name  = "WiktorPC"
 }
 
+resource "aws_iam_role" "ecs_service" {
+  name = "ecs_service"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": ["sts:AssumeRole"],
+      "Principal": {
+        "Service": ["ec2.amazonaws.com", "ecs-tasks.amazonaws.com"]
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "policy" {
+  name        = "test-policy"
+  description = "A test policy"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ssm:GetParameters", "ssm:DescribeParameters", "ssm:GetParameter","ssm:GetParametersByPath"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "role-attatchment" {
+  role       = aws_iam_role.ecs_service.name
+  policy_arn = aws_iam_policy.policy.arn
+}
+
 resource "aws_ecs_task_definition" "task" {
-  family = "nginx"
+  family        = "nginx"
+  task_role_arn = aws_iam_role.ecs_service.arn
 
   container_definitions = file("task-definition.json")
   depends_on = [
